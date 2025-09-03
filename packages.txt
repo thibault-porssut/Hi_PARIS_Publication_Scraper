@@ -1,7 +1,9 @@
 chromium
 chromium-driver
-chromium-chromedriver
 xvfb
 libnss3
 libgbm1
 libasound2
+chromium-browser
+fonts-liberation
+libappindicator3-1

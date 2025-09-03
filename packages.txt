@@ -1,5 +1,7 @@
 chromium
 chromium-driver
-wget
+chromium-chromedriver
 xvfb
-unzip
+libnss3
+libgbm1
+libasound2

@@ -181,34 +181,43 @@ if uploaded_excel is not None and conference_urls:
             status_text.write(f"Found {len(authors)} authors to process")
             
             # Configure Selenium for both local and cloud environments
-            import chromedriver_autoinstaller
-            from selenium.webdriver.chrome.service import Service
+            import tempfile
+            import os
             
-            # Install ChromeDriver if needed
-            chromedriver_autoinstaller.install()
+            # Create a temporary directory that we have permission to access
+            temp_dir = tempfile.mkdtemp()
+            os.environ['WDM_LOCAL'] = '1'  # Force local installation
+            os.environ['WDM_PATH'] = temp_dir  # Set custom path for webdriver
             
             chrome_options = webdriver.ChromeOptions()
-            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--headless=new")  # Updated headless mode
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--disable-extensions")
             chrome_options.add_argument("--disable-software-rasterizer")
-            chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+            chrome_options.add_argument('--remote-debugging-port=9222')
             chrome_options.add_argument("--window-size=1920,1080")
+            chrome_options.add_argument("--log-level=3")  # Only show fatal errors
             
             try:
-                # Use ChromeDriver with autoinstaller
-                driver = webdriver.Chrome(options=chrome_options)
+                # Try using ChromeDriverManager with custom path
+                from webdriver_manager.chrome import ChromeDriverManager
+                from webdriver_manager.core.os_manager import get_os_type
+                
+                # Configure ChromeDriverManager to use our temp directory
+                driver_path = ChromeDriverManager(
+                    path=temp_dir,
+                    latest_release_url="https://chromedriver.storage.googleapis.com/LATEST_RELEASE"
+                ).install()
+                
+                service = Service(driver_path)
+                driver = webdriver.Chrome(service=service, options=chrome_options)
+                
             except Exception as e:
-                try:
-                    # Fallback to WebDriver Manager if autoinstaller fails
-                    service = Service(ChromeDriverManager(version="latest").install())
-                    driver = webdriver.Chrome(service=service, options=chrome_options)
-                except Exception as e:
-                    st.error(f"Failed to initialize Chrome driver: {str(e)}")
-                    st.error("Please check your Chrome installation and try again.")
-                    raise e
+                st.error(f"Failed to initialize Chrome driver: {str(e)}")
+                st.error("Please try refreshing the page or contact support if the issue persists.")
+                raise e
             
             grouped_data = []
             pubs_seen = set()

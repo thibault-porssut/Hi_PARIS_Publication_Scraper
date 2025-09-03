@@ -4,6 +4,7 @@ xvfb
 libnss3
 libgbm1
 libasound2
-chromium-browser
 fonts-liberation
-libappindicator3-1
+libx11-xcb1
+libxss1
+xdg-utils

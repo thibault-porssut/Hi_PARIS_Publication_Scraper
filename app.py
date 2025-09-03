@@ -182,18 +182,39 @@ if uploaded_excel is not None and conference_urls:
             
             # Configure Selenium for cloud environment
             from selenium.webdriver.chrome.service import Service
+            import subprocess
+            import shutil
+            
+            # Find chromium and chromedriver paths
+            chromium_path = shutil.which('chromium') or "/usr/bin/chromium"
+            chromedriver_path = shutil.which('chromedriver') or "/usr/bin/chromedriver"
+            
+            # Print debug info
+            st.write(f"Chromium path: {chromium_path}")
+            st.write(f"ChromeDriver path: {chromedriver_path}")
+            
+            # Check if chromium exists
+            if not os.path.exists(chromium_path):
+                st.error(f"Chromium not found at {chromium_path}")
+                # Try to find it using which
+                try:
+                    chromium_path = subprocess.check_output(['which', 'chromium']).decode().strip()
+                    st.write(f"Found Chromium at: {chromium_path}")
+                except subprocess.CalledProcessError:
+                    st.error("Could not find Chromium installation")
             
             chrome_options = webdriver.ChromeOptions()
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
             chrome_options.add_argument("--disable-gpu")
-            chrome_options.binary_location = "/usr/bin/chromium"
+            chrome_options.binary_location = chromium_path
             
             try:
-                # Use the system-installed chromedriver
-                service = Service(executable_path="/usr/bin/chromedriver")
+                # Try to create driver with system chromedriver
+                service = Service(executable_path=chromedriver_path)
                 driver = webdriver.Chrome(service=service, options=chrome_options)
+                st.success("Successfully initialized Chrome driver")
                 
             except Exception as e:
                 st.error(f"Failed to initialize Chrome driver: {str(e)}")

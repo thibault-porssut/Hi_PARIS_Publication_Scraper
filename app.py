@@ -179,14 +179,32 @@ if uploaded_excel is not None and conference_urls:
             
             status_text.write(f"Found {len(authors)} authors to process")
             
-            # Configure Selenium
+            # Configure Selenium for both local and cloud environments
             chrome_options = webdriver.ChromeOptions()
-            if headless:
-                chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
-            service = Service(ChromeDriverManager().install())
-            driver = webdriver.Chrome(service=service, options=chrome_options)
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--disable-extensions")
+            chrome_options.add_argument("--disable-infobars")
+            chrome_options.add_argument("--remote-debugging-port=9222")
+            chrome_options.add_argument("--disable-dev-tools")
+            chrome_options.add_argument("--test-type")
+            chrome_options.add_argument("--window-size=1920,1080")
+            
+            try:
+                # Try cloud-specific setup first
+                options = webdriver.ChromeOptions()
+                options.add_argument('--headless')
+                driver = webdriver.Chrome(options=options)
+            except Exception as e:
+                try:
+                    # Fallback to local setup if cloud setup fails
+                    service = Service(ChromeDriverManager().install())
+                    driver = webdriver.Chrome(service=service, options=chrome_options)
+                except Exception as e:
+                    st.error("Failed to initialize Chrome driver. Please check if Chrome is installed and try again.")
+                    raise e
             
             grouped_data = []
             pubs_seen = set()

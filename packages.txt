@@ -1,4 +1,5 @@
 chromium
 chromium-driver
-firefox-esr
-geckodriver
+wget
+xvfb
+unzip

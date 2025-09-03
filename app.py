@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import pandas as pd
 import requests
+import chromedriver_autoinstaller
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -180,30 +181,33 @@ if uploaded_excel is not None and conference_urls:
             status_text.write(f"Found {len(authors)} authors to process")
             
             # Configure Selenium for both local and cloud environments
+            import chromedriver_autoinstaller
+            from selenium.webdriver.chrome.service import Service
+            
+            # Install ChromeDriver if needed
+            chromedriver_autoinstaller.install()
+            
             chrome_options = webdriver.ChromeOptions()
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--disable-extensions")
-            chrome_options.add_argument("--disable-infobars")
-            chrome_options.add_argument("--remote-debugging-port=9222")
-            chrome_options.add_argument("--disable-dev-tools")
-            chrome_options.add_argument("--test-type")
+            chrome_options.add_argument("--disable-software-rasterizer")
+            chrome_options.add_argument("--disable-features=VizDisplayCompositor")
             chrome_options.add_argument("--window-size=1920,1080")
             
             try:
-                # Try cloud-specific setup first
-                options = webdriver.ChromeOptions()
-                options.add_argument('--headless')
-                driver = webdriver.Chrome(options=options)
+                # Use ChromeDriver with autoinstaller
+                driver = webdriver.Chrome(options=chrome_options)
             except Exception as e:
                 try:
-                    # Fallback to local setup if cloud setup fails
-                    service = Service(ChromeDriverManager().install())
+                    # Fallback to WebDriver Manager if autoinstaller fails
+                    service = Service(ChromeDriverManager(version="latest").install())
                     driver = webdriver.Chrome(service=service, options=chrome_options)
                 except Exception as e:
-                    st.error("Failed to initialize Chrome driver. Please check if Chrome is installed and try again.")
+                    st.error(f"Failed to initialize Chrome driver: {str(e)}")
+                    st.error("Please check your Chrome installation and try again.")
                     raise e
             
             grouped_data = []
